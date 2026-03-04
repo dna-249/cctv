@@ -4,8 +4,8 @@ import pickle
 import struct
 import threading
 
-host_ip = socket.gethostbyname(socket.gethostname())
-port = 5050
+host_ip = 'cctv-i1ly.onrender.com'
+port = 1000
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
