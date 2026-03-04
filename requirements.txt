@@ -10,3 +10,4 @@ MarkupSafe==3.0.3
 numpy==2.4.2
 opencv-python-headless
 Werkzeug==3.1.6
+gunicorn
