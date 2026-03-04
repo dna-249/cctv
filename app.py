@@ -1,9 +1,9 @@
 from flask import Flask, render_template, Response, jsonify,  request,  send_file
 import os
 from flask import send_from_directory
-from server import server
+# from server import server
 from client import generate_frames
-import threading
+# import threading
 import cv2
 import numpy as np
 import base64
@@ -15,7 +15,7 @@ app = Flask(__name__)
 recording = False
 
 # Start socket server in background
-threading.Thread(target=server, daemon=True).start()
+# threading.Thread(target=server, daemon=True).start()
 
 
 # Home page (video page)
