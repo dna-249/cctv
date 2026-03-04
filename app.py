@@ -1,9 +1,13 @@
-from flask import Flask, render_template, Response, jsonify,    send_file
+from flask import Flask, render_template, Response, jsonify,  request,  send_file
 import os
 from flask import send_from_directory
 from server import server
 from client import generate_frames
 import threading
+import cv2
+import numpy as np
+import base64
+
 
 app = Flask(__name__)
 
@@ -72,6 +76,25 @@ def delete_video(filename):
         return jsonify({"status": "success", "message": f"{filename} deleted"})
     else:
         return jsonify({"status": "error", "message": "File not found"}), 404
+    
+@app.route('/upload_frame', methods=['POST'])
+def upload_frame():
+    try:
+        data = request.json['image']
+        # Remove the header (data:image/jpeg;base64,)
+        encoded_data = data.split(',')[1]
+        
+        # Convert base64 string to an OpenCV image
+        nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # --- THIS IS WHERE YOUR CCTV LOGIC GOES ---
+        # Example: Save a frame if motion is detected
+        # cv2.imwrite("latest_capture.jpg", frame)
+        
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)

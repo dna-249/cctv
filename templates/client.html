@@ -53,11 +53,39 @@
 
     <button onclick="startRecording()">Start Recording</button>
     <button onclick="stopRecording()">Stop Recording</button>
-    
+
      <br><br>
     <a href="/recordings">View Recordings</a>
+    <video id="video" autoplay playsinline style="width: 100%; max-width: 500px;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
-    <script>
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+
+    // 1. Access the Rear Camera on Android
+    navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" } 
+    }).then(stream => {
+        video.srcObject = stream;
+        setInterval(captureAndSend, 200); // 5 frames per second
+    });
+
+    function captureAndSend() {
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, 640, 480);
+        
+        // Convert to Base64 JPEG
+        const imageData = canvas.toDataURL('image/jpeg', 0.5); 
+
+        // Send to your Render URL
+        fetch('/upload_frame', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData })
+        });
+    }
+
         function startRecording() {
             fetch('/start_recording');
         }
