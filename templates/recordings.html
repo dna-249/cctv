@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recorded Videos</title>
+</head>
+<body>
+
+    <h2>Previous Recordings</h2>
+
+    {% for file in files %}
+<div style="margin-bottom:30px;">
+    <h4>{{ file }}</h4>
+
+    <!-- Video Player -->
+    <video width="640" controls preload="metadata">
+        <source src="{{ url_for('serve_video', filename=file) }}" type="video/mp4">
+    </video>
+
+    <br>
+    <a href="{{ url_for('serve_video', filename=file) }}" download>Download</a>
+
+    <!-- Delete Button -->
+    <button onclick="deleteVideo('{{ file }}')">Delete</button>
+</div>
+{% endfor %}
+
+<script>
+function deleteVideo(filename) {
+    if (!confirm("Are you sure you want to delete " + filename + "?")) return;
+
+    fetch('/delete/' + filename, {
+        method: 'POST'
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        if (data.status === "success") {
+            location.reload(); // refresh page to update list
+        }
+    })
+    .catch(err => alert("Error deleting file: " + err));
+}
+</script>
+
+    <br>
+    <a href="/">Back to Live</a>
+
+</body>
+</html>

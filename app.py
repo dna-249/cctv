@@ -1,0 +1,77 @@
+from flask import Flask, render_template, Response, jsonify,    send_file
+import os
+from flask import send_from_directory
+from server import server
+from client import generate_frames
+import threading
+
+app = Flask(__name__)
+
+# Global recording state
+recording = False
+
+# Start socket server in background
+threading.Thread(target=server, daemon=True).start()
+
+
+# Home page (video page)
+@app.route('/')
+def home():
+    return render_template("client.html")
+
+
+# Video streaming route
+@app.route('/video')
+def video():
+    return Response(generate_frames(lambda: recording),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+# Start recording
+@app.route('/start_recording')
+def start_recording():
+    global recording
+    recording = True
+    return jsonify({"status": "recording"})
+
+
+# Stop recording
+@app.route('/stop_recording')
+def stop_recording():
+    global recording
+    recording = False
+    return jsonify({"status": "stopped"})
+
+
+# Recording status (for blinking REC indicator)
+@app.route('/recording_status')
+def recording_status():
+    return jsonify({"recording": recording})
+RECORD_FOLDER = "recordings"
+
+@app.route('/recordings')
+def list_recordings():
+    files = sorted(os.listdir(RECORD_FOLDER), reverse=True)
+    return render_template("recordings.html", files=files)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory(RECORD_FOLDER, filename)
+RECORD_FOLDER = "recordings"
+
+@app.route('/videos/<filename>')
+def serve_video(filename):
+    path = os.path.join("recordings", filename)
+    return send_file(path, mimetype='video/mp4')
+
+@app.route('/delete/<filename>', methods=['POST'])
+def delete_video(filename):
+    path = os.path.join(RECORD_FOLDER, filename)
+    if os.path.exists(path):
+        os.remove(path)
+        return jsonify({"status": "success", "message": f"{filename} deleted"})
+    else:
+        return jsonify({"status": "error", "message": "File not found"}), 404
+
+if __name__ == '__main__':
+    app.run(debug=True)
