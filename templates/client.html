@@ -1,120 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cloud CCTV System</title>
+    <title>CCTV System</title>
     <style>
         body {
             text-align: center;
             background: #111;
             color: white;
-            font-family: sans-serif;
-        }
-
-        /* The main monitor window */
-        .monitor-container {
-            position: relative;
-            display: inline-block;
-            border: 5px solid #333;
-            background: #000;
         }
 
         #rec-indicator {
             position: absolute;
-            top: 15px;
-            right: 20px;
+            top: 20px;
+            right: 30px;
             display: none;
-            color: #ff0000;
+            color: red;
             font-weight: bold;
-            font-size: 20px;
-            text-shadow: 2px 2px 4px #000;
-            z-index: 10;
+            font-size: 22px;
         }
 
         .dot {
-            height: 12px;
-            width: 12px;
+            height: 14px;
+            width: 14px;
             background-color: red;
             border-radius: 50%;
             display: inline-block;
             animation: blink 1s infinite;
         }
 
-        @keyframes blink { 50% { opacity: 0; } }
-
-        button {
-            padding: 12px 24px;
-            margin: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            border: none;
+        @keyframes blink {
+            50% { opacity: 0; }
         }
 
-        .btn-start { background: #28a745; color: white; }
-        .btn-stop { background: #dc3545; color: white; }
-        
-        /* Hide the raw camera feed, we use the <img> to monitor */
-        #video-hidden { display: none; }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
 
-    <h1>NETWORK CCTV MONITOR</h1>
-
-    <div class="monitor-container">
-        <div id="rec-indicator">
-            <span class="dot"></span> REC
-        </div>
-        
-        <img src="{{ url_for('video') }}" width="720" id="monitor-feed">
+    <div id="rec-indicator">
+        <span class="dot"></span> REC
     </div>
+
+    <h1>Live CCTV Feed</h1>
+
+    <img src="{{ url_for('video') }}" width="720">
 
     <br>
 
-    <div class="controls">
-        <button class="btn-start" onclick="startRecording()">Start Recording</button>
-        <button class="btn-stop" onclick="stopRecording()">Stop Recording</button>
-        <br><br>
-        <a href="/recordings" style="color: #007bff; font-size: 18px;">View Saved Recordings</a>
-    </div>
-
-    <video id="video-hidden" autoplay playsinline></video>
-    <canvas id="canvas-hidden" width="640" height="480" style="display:none;"></canvas>
+    <button onclick="startRecording()">Start Recording</button>
+    <button onclick="stopRecording()">Stop Recording</button>
+    
+     <br><br>
+    <a href="/recordings">View Recordings</a>
 
     <script>
-        const video = document.getElementById('video-hidden');
-        const canvas = document.getElementById('canvas-hidden');
-
-        // 1. Access the Camera
-        navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "environment" } 
-        }).then(stream => {
-            video.srcObject = stream;
-            // Capture and upload a frame every 200ms (5 FPS)
-            setInterval(captureAndSend, 200); 
-        }).catch(err => {
-            console.error("Camera Error:", err);
-            alert("Please allow camera access!");
-        });
-
-        function captureAndSend() {
-            const context = canvas.getContext('2d');
-            context.drawImage(video, 0, 0, 640, 480);
-            
-            // Compress to JPEG 0.5 for faster upload to Render
-            const imageData = canvas.toDataURL('image/jpeg', 0.5); 
-
-            fetch('/upload_frame', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: imageData })
-            });
+        function startRecording() {
+            fetch('/start_recording');
         }
 
-        function startRecording() { fetch('/start_recording'); }
-        function stopRecording() { fetch('/stop_recording'); }
+        function stopRecording() {
+            fetch('/stop_recording');
+        }
 
-        // Sync the UI indicator with the server status
+        // Check recording status every second
         setInterval(() => {
             fetch('/recording_status')
             .then(res => res.json())
@@ -124,5 +76,6 @@
             });
         }, 1000);
     </script>
+
 </body>
 </html>
